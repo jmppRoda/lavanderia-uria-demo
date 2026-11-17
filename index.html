@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lavandería URÍA - App Interactiva & Club Fidelización</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Barra Superior Persistente -->
+<nav class="top-navbar">
+    <div class="brand-mini" onclick="goHome()">
+        <img src="logo.png" alt="Logo Lavandería Uría">
+        <span>LAVANDERÍA URÍA</span>
+    </div>
+    <div id="nav-user-area">
+        <button class="btn btn-sm btn-primary" onclick="showScreen('auth')">Entrar / Club URÍA</button>
+    </div>
+</nav>
+
+<!-- Cabecera Principal con la Imagen Original del Usuario -->
+<header class="hero" id="main-hero">
+    <div class="hero-logo-box">
+        <img src="logo.png" alt="Lavandería Autoservicio Uría Bembibre">
+    </div>
+    <h1>Lavandería URÍA</h1>
+    <p>Autoservicio en Bembibre • Consulta máquinas y acumula lavados gratis</p>
+</header>
+
+<div class="container">
+
+    <!-- PANTALLA 1: INICIO DE SESIÓN / REGISTRO -->
+    <section id="screen-auth" class="card auth-box" style="display:none;">
+        <div style="text-align:center; margin-bottom:18px;">
+            <img src="logo.png" style="width:70px; height:70px; object-fit:contain; margin-bottom:8px;">
+            <h2 style="font-size:1.3rem;">Acceso al Club Lavandería URÍA</h2>
+            <p style="font-size:0.86rem; color:var(--text-muted); margin-top:4px;">
+                Crea tu cuenta o inicia sesión con tu móvil. <strong>¡Cada 6 lavados tienes 1 lavado GRATIS!</strong>
+            </p>
+        </div>
+        <div class="form-group">
+            <label>Tu Nombre</label>
+            <input type="text" id="login-name" placeholder="Ej: Carlos García">
+        </div>
+        <div class="form-group">
+            <label>Teléfono Móvil (ID de cliente y Bizum)</label>
+            <input type="tel" id="login-phone" placeholder="Ej: 612345678">
+        </div>
+        <button class="btn btn-primary" onclick="loginUser()">Entrar / Crear Cuenta Gratis</button>
+        <div style="margin-top:14px; text-align:center;">
+            <button class="btn btn-sm btn-outline" onclick="quickDemoUser()">⚡ Rellenar con Usuario de Prueba (5/6 lavados)</button>
+        </div>
+        <div style="margin-top:10px; text-align:center;">
+            <button class="btn btn-sm btn-outline" style="border:none; color:var(--text-muted);" onclick="goHome()">← Volver sin iniciar sesión</button>
+        </div>
+    </section>
+
+    <!-- PANTALLA 2: PANEL DE CLIENTE + SELECCIÓN DE LOCAL -->
+    <section id="screen-home" style="margin-top: 24px;">
+        
+        <!-- Tarjeta de Fidelización si hay usuario logueado -->
+        <div id="loyalty-panel" class="loyalty-banner" style="display:none;">
+            <div class="loyalty-top">
+                <div>
+                    <span style="font-size:0.78rem; text-transform:uppercase; opacity:0.85; letter-spacing:1px;">Tarjeta Digital Club URÍA</span>
+                    <h3 id="user-greeting" style="font-size:1.25rem;">Hola, Usuario</h3>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span id="stamps-counter-badge" style="background:white; color:var(--navy); padding:5px 12px; border-radius:99px; font-weight:800; font-size:0.85rem;">0 / 6 Lavados</span>
+                    <button class="btn btn-sm btn-outline" style="background:rgba(255,255,255,0.15); color:white; border:none;" onclick="logoutUser()">Salir</button>
+                </div>
+            </div>
+
+            <p style="font-size:0.85rem; opacity:0.9;">Completa 6 ciclos de lavado en cualquiera de nuestros locales de Bembibre y obtén un cupón de lavado gratuito:</p>
+
+            <!-- 6 Casillas Visuales de Sellos -->
+            <div class="stamps-row" id="stamps-grid"></div>
+
+            <!-- Alerta de Cupón Disponible -->
+            <div id="coupon-box" class="coupon-alert" style="display:none;">
+                <div>
+                    <strong>🎉 ¡TIENES UN CUPÓN DE LAVADO GRATIS!</strong><br>
+                    <span style="font-size:0.82rem;">Código: <strong id="active-coupon-code">URIA-FREE-000</strong> • Válido para lavadora 16 kg</span>
+                </div>
+                <button class="btn btn-sm btn-success" onclick="openRedeemInfoModal()">Usar Cupón Ahora</button>
+            </div>
+        </div>
+
+        <!-- Aviso si no ha iniciado sesión -->
+        <div id="guest-banner" class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-left:5px solid var(--primary);">
+            <div>
+                <strong>🎁 ¿Aún no estás en el Club URÍA?</strong>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">Inicia sesión para registrar tus lavados y conseguir el 6º totalmente gratis.</p>
+            </div>
+            <button class="btn btn-sm btn-primary" onclick="showScreen('auth')">Crear Cuenta / Entrar</button>
+        </div>
+
+        <h2 style="font-size:1.2rem; margin-bottom:14px;">1. Selecciona tu local en Bembibre</h2>
+        <div class="location-grid">
+            <div class="loc-card" onclick="selectLocation('local1')">
+                <img src="logo.png" alt="Local 1">
+                <h3 style="font-size:1.15rem;">Local 1 - Eloy Reigada</h3>
+                <p style="font-size:0.86rem; color:var(--text-muted); margin:6px 0;">C/ Eloy Reigada, 16 • Bembibre</p>
+                <span id="loc1-summary" style="display:inline-block; background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:99px; font-size:0.8rem; font-weight:700;">Cargando...</span>
+            </div>
+
+            <div class="loc-card" onclick="selectLocation('local2')">
+                <img src="logo.png" alt="Local 2">
+                <h3 style="font-size:1.15rem;">Local 2 - Santiago Basanta</h3>
+                <p style="font-size:0.86rem; color:var(--text-muted); margin:6px 0;">C/ Alcalde Santiago Basanta, 28 • Bembibre</p>
+                <span id="loc2-summary" style="display:inline-block; background:#e0f2fe; color:#0369a1; padding:4px 12px; border-radius:99px; font-size:0.8rem; font-weight:700;">Cargando...</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- PANTALLA 3: MÁQUINAS DEL LOCAL SELECCIONADO -->
+    <section id="screen-local" style="display:none; margin-top:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+            <button class="btn btn-sm btn-outline" onclick="goHome()">← Volver a Locales</button>
+            <div style="font-size:0.82rem; color:var(--text-muted); font-weight:600;">
+                🟢 Pulsa sobre una máquina <strong>LIBRE</strong> para iniciar el proceso
+            </div>
+        </div>
+
+        <div class="card" style="padding:18px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-left:5px solid var(--primary);">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <img src="logo.png" style="width:54px; height:54px; border-radius:12px; object-fit:contain; border:1px solid #e2e8f0; background:white; padding:2px;">
+                <div>
+                    <h2 id="local-title" style="font-size:1.15rem;">Local 1</h2>
+                    <p id="local-address" style="font-size:0.84rem; color:var(--text-muted);">Dirección</p>
+                </div>
+            </div>
+            <div style="display:flex; gap:14px; font-size:0.85rem; font-weight:700;">
+                <span style="color:var(--free);">● <span id="cnt-free">0</span> Libres</span>
+                <span style="color:var(--busy);">● <span id="cnt-busy">0</span> En uso</span>
+                <span style="color:var(--error);">● <span id="cnt-err">0</span> Avería</span>
+            </div>
+        </div>
+
+        <div id="machines-grid" class="machines-grid"></div>
+    </section>
+
+</div>
+
+<!-- MODAL PASO A PASO: USO DE MÁQUINA Y VALIDACIÓN -->
+<div class="modal-overlay" id="machine-modal" onclick="closeMachineModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <div class="step-indicator">
+            <div class="step-dot active" id="dot-step-1"></div>
+            <div class="step-dot" id="dot-step-2"></div>
+            <div class="step-dot" id="dot-step-3"></div>
+        </div>
+
+        <!-- Paso 1: Confirmar máquina y método (Pago normal en monedero o Cupón Gratis) -->
+        <div id="modal-step-1">
+            <h3 id="m-modal-title" style="font-size:1.25rem; margin-bottom:6px;">Lavadora 1 (16 kg)</h3>
+            <p id="m-modal-sub" style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">Local 1 • Tarifa: 7,00 €</p>
+
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px; margin-bottom:16px; text-align:left; font-size:0.85rem;">
+                <strong>¿Cómo funciona este paso en el local?</strong>
+                <p style="color:var(--text-muted); margin-top:4px; line-height:1.4;">
+                    1. Introduce las monedas en el monedero físico de la máquina.<br>
+                    2. Pulsa el botón de arranque en la lavadora.<br>
+                    3. Escanea el QR de la máquina (o pulsa abajo) para que la pinza amperimétrica confirme el arranque y sume tu sello.
+                </p>
+            </div>
+
+            <!-- Opción Normal (Monedero + Sello) -->
+            <button class="btn btn-primary" onclick="goToStep2('paid')" style="margin-bottom:10px;">
+                🪙 Ya eché monedas • Validar Lavado (+1 Sello)
+            </button>
+
+            <!-- Opción Cupón Gratis (Solo aparece si tiene cupón disponible) -->
+            <button id="btn-use-free-coupon" class="btn btn-success" onclick="goToStep2('coupon')" style="display:none; margin-bottom:10px;">
+                🎁 Canjear Cupón Lavado GRATIS (0,00 €)
+            </button>
+
+            <button class="btn btn-outline" style="width:100%;" onclick="closeMachineModal()">Cancelar</button>
+        </div>
+
+        <!-- Paso 2: Escaneo QR / Simulación de Pinza Amperimétrica o Desbloqueo -->
+        <div id="modal-step-2" style="display:none; text-align:center;">
+            <h3 id="step2-title" style="font-size:1.15rem;">Validando arranque eléctrico...</h3>
+            <p id="step2-desc" style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+                Simulando lectura de pinza amperimétrica en el cuadro eléctrico (> 2.5 A detectados).
+            </p>
+
+            <!-- QR Simulado de la Máquina -->
+            <div class="qr-simulated" title="QR pegado en el frontal de la máquina">
+                <div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div><div class="qr-cell"></div>
+                <div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div>
+                <div class="qr-cell w"></div><div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell w"></div>
+                <div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div>
+                <div class="qr-cell"></div><div class="qr-cell"></div><div class="qr-cell w"></div><div class="qr-cell"></div><div class="qr-cell"></div>
+            </div>
+            <div style="font-size:0.78rem; font-family:monospace; color:var(--text-muted); margin-bottom:14px;" id="qr-machine-label">QR-MAQUINA-L01</div>
+
+            <div id="coupon-unlock-methods" style="display:none; text-align:left; background:#fefce8; border:1.5px solid #eab308; padding:12px; border-radius:12px; margin-bottom:14px; font-size:0.83rem;">
+                <strong>🔓 Elige cómo desbloquear el lavado gratis a coste 0:</strong>
+                <div style="margin-top:8px; display:flex; flex-direction:column; gap:8px;">
+                    <button class="btn btn-sm btn-warning" onclick="confirmStartMachine('relay')">
+                        ⚡ Opción 1: Relé Wi-Fi en paralelo al monedero (Arranque instantáneo)
+                    </button>
+                    <button class="btn btn-sm btn-outline" onclick="confirmStartMachine('bizum')">
+                        📲 Opción 2: Solicitar reembolso Bizum de 7,00 € al dueño (para echar monedas)
+                    </button>
+                </div>
+            </div>
+
+            <button id="btn-confirm-paid" class="btn btn-primary" onclick="confirmStartMachine('paid')">
+                ✅ Confirmar Arranque y Sumar Sello
+            </button>
+        </div>
+
+        <!-- Paso 3: Máquina en marcha + Resultado de puntos -->
+        <div id="modal-step-3" style="display:none; text-align:center;">
+            <div style="font-size:3rem; margin-bottom:8px;">🌀</div>
+            <h3 style="color:var(--free); font-size:1.25rem;">¡Máquina en Funcionamiento!</h3>
+            <p id="step3-summary" style="font-size:0.9rem; color:var(--text); margin:10px 0 16px; line-height:1.45;"></p>
+            <button class="btn btn-primary" onclick="closeMachineModal()">Aceptar y Ver Estado</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL PANEL DE DUEÑO / SIMULADOR TÉCNICO -->
+<div class="modal-overlay" id="admin-modal" onclick="closeAdminModal()">
+    <div class="modal-box" style="max-width:520px;" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+            <h3 style="font-size:1.15rem;">🛠️ Panel del Dueño (Simulador Técnico)</h3>
+            <button class="btn btn-sm btn-outline" onclick="closeAdminModal()">Cerrar</button>
+        </div>
+        <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:14px;">
+            Aquí ves lo que recibes tú en tu Google Sheets / móvil cuando un cliente canjea un cupón gratis o cuando quieres simular el paso del tiempo.
+        </p>
+
+        <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:12px; padding:12px; margin-bottom:14px;">
+            <strong style="font-size:0.88rem;">📩 Solicitudes de Lavado Gratis / Bizum Pendientes:</strong>
+            <div id="admin-requests-list" style="margin-top:8px; font-size:0.82rem; color:var(--text-muted);">
+                No hay solicitudes pendientes ahora mismo.
+            </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="simulateFinishAll()">⏩ Simular Fin de Todos los Ciclos</button>
+            <button class="btn btn-sm btn-outline" onclick="resetDemoData()">🔄 Reiniciar Datos de Demo</button>
+        </div>
+    </div>
+</div>
+
+<!-- Botón Flotante Panel Dueño -->
+<div class="admin-drawer">
+    <button class="admin-badge-btn" onclick="openAdminModal()">
+        🛠️ Panel Dueño <span id="admin-notif" class="notif-dot" style="display:none;"></span>
+    </button>
+</div>
+
+<script>
+    const DEFAULT_STATE = {
+        currentUser: null,
+        users: {
+            "600111222": { name: "Laura Martínez (5/6 Lavados)", phone: "600111222", stamps: 5, coupons: [] }
+        },
+        adminRequests: [],
+        currentLocalId: "local1",
+        locations: {
+            local1: {
+                id: "local1",
+                name: "Local 1 - URÍA",
+                address: "C/ Eloy Reigada, 16, Bembibre",
+                machines: [
+                    { id: "L1-01", type: "washer", name: "Lavadora 1", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "L1-02", type: "washer", name: "Lavadora 2", cap: "16 kg", status: "busy", time: 18, price: "7,00 €" },
+                    { id: "L1-03", type: "washer", name: "Lavadora 3", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "L1-04", type: "washer", name: "Lavadora 4", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "L1-05", type: "washer", name: "Lavadora 5", cap: "16 kg", status: "busy", time: 29, price: "7,00 €" },
+                    { id: "S1-01", type: "dryer", name: "Secadora 1", cap: "20 kg", status: "free", time: 0, price: "3,50 €" },
+                    { id: "S1-02", type: "dryer", name: "Secadora 2", cap: "20 kg", status: "free", time: 0, price: "3,50 €" }
+                ]
+            },
+            local2: {
+                id: "local2",
+                name: "Local 2 - URÍA",
+                address: "C/ Alcalde Santiago Basanta, 28, Bembibre",
+                machines: [
+                    { id: "L2-01", type: "washer", name: "Lavadora 1", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "L2-02", type: "washer", name: "Lavadora 2", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "L2-03", type: "washer", name: "Lavadora 3", cap: "16 kg", status: "error", time: 0, price: "7,00 €" },
+                    { id: "L2-04", type: "washer", name: "Lavadora 4", cap: "16 kg", status: "busy", time: 12, price: "7,00 €" },
+                    { id: "L2-05", type: "washer", name: "Lavadora 5", cap: "16 kg", status: "free", time: 0, price: "7,00 €" },
+                    { id: "S2-01", type: "dryer", name: "Secadora 1", cap: "20 kg", status: "busy", time: 8, price: "3,50 €" },
+                    { id: "S2-02", type: "dryer", name: "Secadora 2", cap: "20 kg", status: "free", time: 0, price: "3,50 €" }
+                ]
+            }
+        }
+    };
+
+    let appState = JSON.parse(localStorage.getItem("uria_demo_state")) || JSON.parse(JSON.stringify(DEFAULT_STATE));
+    let selectedMachine = null;
+
+    function saveState() {
+        localStorage.setItem("uria_demo_state", JSON.stringify(appState));
+        updateUI();
+    }
+
+    function resetDemoData() {
+        appState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        saveState();
+        closeAdminModal();
+        goHome();
+    }
+
+    function showScreen(screenName) {
+        document.getElementById("screen-auth").style.display = screenName === "auth" ? "block" : "none";
+        document.getElementById("screen-home").style.display = screenName === "home" ? "block" : "none";
+        document.getElementById("screen-local").style.display = screenName === "local" ? "block" : "none";
+        document.getElementById("main-hero").style.display = screenName === "local" ? "none" : "block";
+    }
+
+    function goHome() {
+        showScreen("home");
+        updateUI();
+    }
+
+    function quickDemoUser() {
+        document.getElementById("login-name").value = "Laura Martínez";
+        document.getElementById("login-phone").value = "600111222";
+    }
+
+    function loginUser() {
+        const name = document.getElementById("login-name").value.trim() || "Cliente URÍA";
+        const phone = document.getElementById("login-phone").value.trim();
+        if (!phone) {
+            alert("Introduce un número de teléfono móvil para identificarte en el Club URÍA.");
+            return;
+        }
+        if (!appState.users[phone]) {
+            appState.users[phone] = { name: name, phone: phone, stamps: 0, coupons: [] };
+        } else {
+            appState.users[phone].name = name;
+        }
+        appState.currentUser = phone;
+        saveState();
+        goHome();
+    }
+
+    function logoutUser() {
+        appState.currentUser = null;
+        saveState();
+        goHome();
+    }
+
+    function updateUI() {
+        const navUser = document.getElementById("nav-user-area");
+        if (appState.currentUser && appState.users[appState.currentUser]) {
+            const u = appState.users[appState.currentUser];
+            navUser.innerHTML = `
+                <div class="user-pill" onclick="goHome()">
+                    👤 ${u.name.split(" ")[0]} • ⭐ ${u.stamps}/6
+                </div>
+            `;
+            document.getElementById("loyalty-panel").style.display = "block";
+            document.getElementById("guest-banner").style.display = "none";
+            renderLoyaltyCard(u);
+        } else {
+            navUser.innerHTML = `<button class="btn btn-sm btn-primary" onclick="showScreen('auth')">Entrar / Club URÍA</button>`;
+            document.getElementById("loyalty-panel").style.display = "none";
+            document.getElementById("guest-banner").style.display = "flex";
+        }
+
+        const l1Free = appState.locations.local1.machines.filter(m => m.status === "free").length;
+        const l2Free = appState.locations.local2.machines.filter(m => m.status === "free").length;
+        document.getElementById("loc1-summary").innerText = `🟢 ${l1Free} de 7 máquinas libres`;
+        document.getElementById("loc2-summary").innerText = `🟢 ${l2Free} de 7 máquinas libres`;
+
+        const pendingCount = appState.adminRequests.filter(r => r.status === "pending").length;
+        document.getElementById("admin-notif").style.display = pendingCount > 0 ? "inline-block" : "none";
+
+        if (document.getElementById("screen-local").style.display === "block") {
+            renderLocalMachines();
+        }
+    }
+
+    function renderLoyaltyCard(user) {
+        document.getElementById("user-greeting").innerText = `Hola, ${user.name}`;
+        document.getElementById("stamps-counter-badge").innerText = `${user.stamps} / 6 Lavados`;
+
+        let stampsHtml = "";
+        for (let i = 1; i <= 6; i++) {
+            const isFilled = i <= user.stamps;
+            const isRewardSlot = i === 6;
+            stampsHtml += `
+                <div class="stamp-slot ${isFilled ? 'filled' : ''} ${isRewardSlot ? 'reward' : ''}">
+                    <span style="font-size:1.2rem;">${isFilled ? '💧' : (isRewardSlot ? '🎁' : i)}</span>
+                    <span>${isRewardSlot ? 'GRATIS' : 'Lav. ' + i}</span>
+                </div>
+            `;
+        }
+        document.getElementById("stamps-grid").innerHTML = stampsHtml;
+
+        const couponBox = document.getElementById("coupon-box");
+        if (user.coupons && user.coupons.length > 0) {
+            couponBox.style.display = "flex";
+            document.getElementById("active-coupon-code").innerText = user.coupons[0];
+        } else {
+            couponBox.style.display = "none";
+        }
+    }
+
+    function openRedeemInfoModal() {
+        alert("Tienes un cupón activo (" + appState.users[appState.currentUser].coupons[0] + "). Selecciona ahora uno de los locales y pulsa sobre cualquier lavadora LIBRE para canjearlo a coste 0 €.");
+    }
+
+    function selectLocation(locId) {
+        appState.currentLocalId = locId;
+        saveState();
+        showScreen("local");
+        renderLocalMachines();
+    }
+
+    function renderLocalMachines() {
+        const loc = appState.locations[appState.currentLocalId];
+        document.getElementById("local-title").innerText = loc.name;
+        document.getElementById("local-address").innerText = loc.address;
+
+        document.getElementById("cnt-free").innerText = loc.machines.filter(m => m.status === "free").length;
+        document.getElementById("cnt-busy").innerText = loc.machines.filter(m => m.status === "busy").length;
+        document.getElementById("cnt-err").innerText = loc.machines.filter(m => m.status === "error").length;
+
+        let html = "";
+        loc.machines.forEach(m => {
+            let statusLabel = "DISPONIBLE";
+            if (m.status === "busy") statusLabel = `EN USO • Quedan ${m.time} min`;
+            if (m.status === "error") statusLabel = "FUERA DE SERVICIO";
+
+            const icon = m.type === "washer" ? "💧" : "🌀";
+            const clickAttr = m.status === "free" ? `onclick="openMachineFlow('${m.id}')"` : "";
+
+            html += `
+                <div class="machine-card ${m.status}" ${clickAttr}>
+                    <div class="m-top">
+                        <span class="m-tag">#${m.id}</span>
+                        <span class="m-cap">${m.cap}</span>
+                    </div>
+                    <div class="drum">${icon}</div>
+                    <div style="font-weight:800; font-size:1.05rem;">${m.name}</div>
+                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">Tarifa: ${m.price}</div>
+                    <span class="status-pill">${statusLabel}</span>
+                </div>
+            `;
+        });
+        document.getElementById("machines-grid").innerHTML = html;
+    }
+
+    function openMachineFlow(machineId) {
+        const loc = appState.locations[appState.currentLocalId];
+        selectedMachine = loc.machines.find(m => m.id === machineId);
+        if (!selectedMachine || selectedMachine.status !== "free") return;
+
+        setModalStep(1);
+        document.getElementById("m-modal-title").innerText = `${selectedMachine.name} (${selectedMachine.cap})`;
+        document.getElementById("m-modal-sub").innerText = `${loc.name} • Tarifa estándar: ${selectedMachine.price}`;
+
+        const user = appState.currentUser ? appState.users[appState.currentUser] : null;
+        const btnFree = document.getElementById("btn-use-free-coupon");
+        if (user && user.coupons && user.coupons.length > 0 && selectedMachine.type === "washer") {
+            btnFree.style.display = "inline-flex";
+        } else {
+            btnFree.style.display = "none";
+        }
+
+        document.getElementById("machine-modal").style.display = "flex";
+    }
+
+    function setModalStep(step) {
+        document.getElementById("modal-step-1").style.display = step === 1 ? "block" : "none";
+        document.getElementById("modal-step-2").style.display = step === 2 ? "block" : "none";
+        document.getElementById("modal-step-3").style.display = step === 3 ? "block" : "none";
+
+        document.getElementById("dot-step-1").classList.toggle("active", step >= 1);
+        document.getElementById("dot-step-2").classList.toggle("active", step >= 2);
+        document.getElementById("dot-step-3").classList.toggle("active", step >= 3);
+    }
+
+    function goToStep2(mode) {
+        setModalStep(2);
+        document.getElementById("qr-machine-label").innerText = `QR-VERIFICADO-${selectedMachine.id}`;
+
+        if (mode === "coupon") {
+            document.getElementById("step2-title").innerText = "Canje de Lavado Gratuito (0,00 €)";
+            document.getElementById("step2-desc").innerText = "Como el monedero físico no acepta códigos, elige cómo se desbloquea o abona este lavado:";
+            document.getElementById("coupon-unlock-methods").style.display = "block";
+            document.getElementById("btn-confirm-paid").style.display = "none";
+        } else {
+            document.getElementById("step2-title").innerText = "Pinza Amperimétrica: Consumo Detectado";
+            document.getElementById("step2-desc").innerText = "El sensor del cuadro eléctrico confirma que la máquina acaba de arrancar.";
+            document.getElementById("coupon-unlock-methods").style.display = "none";
+            document.getElementById("btn-confirm-paid").style.display = "inline-flex";
+        }
+    }
+
+    function confirmStartMachine(executionMode) {
+        const loc = appState.locations[appState.currentLocalId];
+        const m = loc.machines.find(item => item.id === selectedMachine.id);
+        m.status = "busy";
+        m.time = m.type === "washer" ? 35 : 15;
+
+        const user = appState.currentUser ? appState.users[appState.currentUser] : null;
+        let msg = `La <strong>${m.name}</strong> en ${loc.name} ya figura como <strong>EN USO (${m.time} min)</strong> en tiempo real para todos los clientes.`;
+
+        if (executionMode === "paid") {
+            if (user) {
+                user.stamps += 1;
+                if (user.stamps >= 6) {
+                    const code = "URIA-FREE-" + Math.floor(100 + Math.random() * 900);
+                    user.coupons.push(code);
+                    user.stamps = 0;
+                    msg += `<br><br>🎉 <strong>¡HAS COMPLETADO 6 LAVADOS!</strong> Se ha generado automáticamente tu cupón de lavado gratis: <strong>${code}</strong>.`;
+                } else {
+                    msg += `<br><br>⭐ Se ha sumado <strong>+1 sello</strong> a tu tarjeta Club URÍA. Ahora llevas <strong>${user.stamps} de 6 lavados</strong>.`;
+                }
+            } else {
+                msg += `<br><br>💡 <em>Consejo: Inicia sesión en el Club URÍA la próxima vez para acumular este lavado hacia tu 6º ciclo gratis.</em>`;
+            }
+        } else if (executionMode === "relay") {
+            const usedCoupon = user.coupons.shift();
+            appState.adminRequests.unshift({
+                id: Date.now(),
+                user: user.name,
+                phone: user.phone,
+                coupon: usedCoupon,
+                machine: `${m.name} (${loc.name})`,
+                method: "Relé Wi-Fi (Pulso simulado monedero)",
+                status: "completed"
+            });
+            msg += `<br><br>⚡ <strong>Cupón ${usedCoupon} canjeado.</strong> El relé Wi-Fi ha enviado un pulso de 100ms al cable del monedero y la lavadora ha arrancado sin echar monedas.`;
+        } else if (executionMode === "bizum") {
+            const usedCoupon = user.coupons.shift();
+            appState.adminRequests.unshift({
+                id: Date.now(),
+                user: user.name,
+                phone: user.phone,
+                coupon: usedCoupon,
+                machine: `${m.name} (${loc.name})`,
+                method: "Reembolso Bizum 7,00 € pendiente",
+                status: "pending"
+            });
+            msg += `<br><br>📲 <strong>Cupón ${usedCoupon} registrado.</strong> Se ha enviado aviso al Panel del Dueño para abonarte los 7,00 € por Bizum al teléfono <strong>${user.phone}</strong>.`;
+        }
+
+        saveState();
+        setModalStep(3);
+        document.getElementById("step3-summary").innerHTML = msg;
+    }
+
+    function closeMachineModal() {
+        document.getElementById("machine-modal").style.display = "none";
+        renderLocalMachines();
+    }
+
+    function openAdminModal() {
+        const listDiv = document.getElementById("admin-requests-list");
+        if (appState.adminRequests.length === 0) {
+            listDiv.innerHTML = "No hay canjes de cupones registrados aún.";
+        } else {
+            listDiv.innerHTML = appState.adminRequests.map(req => `
+                <div style="background:white; border:1px solid #e2e8f0; border-radius:8px; padding:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                    <div>
+                        <strong>${req.user}</strong> (${req.phone})<br>
+                        <span>Cupón: <code>${req.coupon}</code> • ${req.machine}</span><br>
+                        <span style="color:${req.status === 'pending' ? '#d97706' : '#059669'}; font-weight:700;">${req.method}</span>
+                    </div>
+                    ${req.status === 'pending' ? `<button class="btn btn-sm btn-success" onclick="markBizumPaid(${req.id})">Marcar Bizum Enviado</button>` : '✅'}
+                </div>
+            `).join("");
+        }
+        document.getElementById("admin-modal").style.display = "flex";
+    }
+
+    function closeAdminModal() {
+        document.getElementById("admin-modal").style.display = "none";
+    }
+
+    function markBizumPaid(reqId) {
+        const req = appState.adminRequests.find(r => r.id === reqId);
+        if (req) {
+            req.status = "completed";
+            req.method = "Bizum de 7,00 € abonado ✅";
+            saveState();
+            openAdminModal();
+        }
+    }
+
+    function simulateFinishAll() {
+        ["local1", "local2"].forEach(locId => {
+            appState.locations[locId].machines.forEach(m => {
+                if (m.status === "busy") {
+                    m.status = "free";
+                    m.time = 0;
+                }
+            });
+        });
+        saveState();
+        closeAdminModal();
+    }
+
+    updateUI();
+</script>
+
+</body>
+</html>
